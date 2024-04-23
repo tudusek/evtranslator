@@ -10,14 +10,14 @@
       "maximum": 0,
       "fuzz": 255,
       "flat": 4095,
-      "resolution": 0,
+      "resolution": 0
     }
   },
   "mappings": {
     "EV_KEY": {
       "KEY_W": {
         "event-type": "EV_KEY",
-        "event-code": "KEY_UP",
+        "event-code": "KEY_UP"
       },
       "KEY_S": {
         "event-type": "EV_REL",
@@ -35,7 +35,7 @@
         "event-code": "ABS_X",
         "on-press": 0,
         "on-release": 32878 
-      },
+      }
     },
     "EV_REL": {},
     "EV_ABS": {
@@ -44,13 +44,13 @@
         "event-code": "REL_X",
         "dead-zone": 0,
         "repeat": 1,
-        "max-value": 255;
+        "max-value": 255
       },
       "ABS_HAT0X": {
         "event-type": "EV_KEY",
-        "event-code": "KEY_W",
-        "dead-zone": 0,
+        "event-codes": ["KEY_W","KEY_S"],
+        "dead-zone": 0
       }
-    },
+    }
   }
 }
