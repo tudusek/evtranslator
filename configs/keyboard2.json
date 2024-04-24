@@ -1,0 +1,132 @@
+[
+  {
+    "device-name": "KeyboardP1",
+    "device-bus": 0,
+    "device-vendor": 0,
+    "device-product": 0,
+    "device-version": 0,
+    "mappings": {
+      "EV_KEY": {
+        "KEY_1": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_1"
+        },
+        "KEY_2": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_2"
+        },
+        "KEY_3": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_3"
+        },
+        "KEY_4": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_4"
+        },
+        "KEY_Q": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_Q"
+        },
+        "KEY_W": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_W"
+        },
+        "KEY_E": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_E"
+        },
+        "KEY_A": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_A"
+        },
+        "KEY_S": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_S"
+        },
+        "KEY_D": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_D"
+        },
+        "KEY_Z": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_Z"
+        },
+        "KEY_X": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_X"
+        },
+        "KEY_C": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_C"
+        },
+        "KEY_LEFTSHIFT": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_LEFTSHIFT"
+        },
+        "KEY_LEFTCTRL": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_LEFTCTRL"
+        },
+        "KEY_LEFTMETA": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_LEFTMETA"
+        },
+        "KEY_LEFTALT": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_LEFTALT"
+        },
+        "KEY_SPACE": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_SPACE"
+        }
+      }
+    }
+  },
+  {
+    "device-name": "KeyboardP2",
+    "device-bus": 0,
+    "device-vendor": 0,
+    "device-product": 0,
+    "device-version": 0,
+    "mappings": {
+      "EV_KEY": {
+        "KEY_KP8": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_W"
+        },
+        "KEY_KP5": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_S"
+        },
+        "KEY_KP4": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_A"
+        },
+        "KEY_KP6": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_D"
+        },
+        "KEY_KPENTER": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_SPACE"
+        },
+        "KEY_KP7": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_Q"
+        },
+        "KEY_KP9": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_E"
+        },
+        "KEY_KPPLUS": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_F"
+        },
+        "KEY_KPSLASH": {
+          "event-type": "EV_KEY",
+          "event-code": "KEY_ESC"
+        }
+      }
+    }
+  }
+]

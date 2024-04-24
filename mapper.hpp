@@ -3,6 +3,7 @@
 #include <ostream>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <fcntl.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
@@ -25,8 +26,8 @@ private:
   std::string in_device_path = "";
   json data;
   struct libevdev *input_dev = nullptr;
-  struct libevdev *output_dev = nullptr;
-  struct libevdev_uinput *output_dev_uinput = nullptr;
+  std::vector<struct libevdev *> output_devs;
+  std::vector<struct libevdev_uinput *> output_devs_uinput;
   void parseParameters(int argc, char* argv[]);
   void setupInputDev();
   void setupOutputDev();
