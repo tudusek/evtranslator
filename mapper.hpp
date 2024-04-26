@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ostream>
 #include <fstream>
+#include <cmath>
 #include <string>
 #include <vector>
 #include <fcntl.h>
@@ -15,6 +16,7 @@
 #include <nlohmann/json.hpp>
 #include <linux/input-event-codes.h>
 #include <nlohmann/json_fwd.hpp>
+#include "include/DataStructures.hpp"
 
 using json = nlohmann::json;
 
@@ -24,10 +26,8 @@ public:
   ~evdevMapper();
 private:
   std::string in_device_path = "";
-  json data;
+  std::vector<Config> configs;
   struct libevdev *input_dev = nullptr;
-  std::vector<struct libevdev *> output_devs;
-  std::vector<struct libevdev_uinput *> output_devs_uinput;
   void parseParameters(int argc, char* argv[]);
   void setupInputDev();
   void setupOutputDev();

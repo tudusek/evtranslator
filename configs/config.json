@@ -1,56 +1,77 @@
-{
-  "device-name": "Test device",
-  "device-bus": 0,
-  "device-vendor": 0,
-  "device-product": 0,
-  "device-version": 0,
-  "abs_info": {
-    "ABS_X": {
-      "minimum": 0,
-      "maximum": 0,
-      "fuzz": 255,
-      "flat": 4095,
-      "resolution": 0
-    }
-  },
-  "mappings": {
-    "EV_KEY": {
-      "KEY_W": {
-        "event-type": "EV_KEY",
-        "event-code": "KEY_UP"
-      },
-      "KEY_S": {
-        "event-type": "EV_REL",
-        "event-code": "REL_X",
-        "on-press": 10
-      },
-      "KEY_A": {
-        "event-type": "EV_ABS",
-        "event-code": "ABS_X",
-        "on-press": 65535,
-        "on-release": 32878 
-      },
-      "KEY_D": {
-        "event-type": "EV_ABS",
-        "event-code": "ABS_X",
-        "on-press": 0,
-        "on-release": 32878 
+[
+  {
+    "device-name": "Test device",
+    "device-bus": 0,
+    "device-vendor": 0,
+    "device-product": 0,
+    "device-version": 0,
+    "abs-info": {
+      "ABS_X": {
       }
     },
-    "EV_REL": {},
-    "EV_ABS": {
-      "ABS_X": {
-        "event-type": "EV_REL",
-        "event-code": "REL_X",
-        "dead-zone": 0,
-        "repeat": 1,
-        "max-value": 255
+    "mappings": {
+      "EV_KEY": {
+        "KEY_W": {
+          "action-type": "multi",
+          "events": [
+            {
+              "type": "EV_KEY",
+              "code": "KEY_UP"
+            },
+            {
+              "type": "EV_REL",
+              "code": "REL_X",
+              "value": 10
+            }
+          ]
+        },
+        "KEY_UP": {
+          "action-type": "single",
+          "events": [
+            {
+              "type": "EV_REL",
+              "code": "REL_Y",
+              "value": -10
+            }
+          ]
+        },
+        "KEY_DOWN": {
+          "action-type": "single",
+          "events": [
+            {
+              "type": "EV_ABS",
+              "code": "ABS_X",
+              "value": 65535
+            }
+          ]
+        }
       },
-      "ABS_HAT0X": {
-        "event-type": "EV_KEY",
-        "event-codes": ["KEY_W","KEY_S"],
-        "dead-zone": 0
+      "EV_ABS": {
+        "ABS_X": {
+          "deadzone": 0,
+          "action-type": "single",
+          "events": [
+            {
+              "type": "EV_REL",
+              "code": "REL_X"
+            }
+          ]
+        },
+        "ABS_Y": {
+          "deadzone": 0,
+          "action-type": "convert",
+          "event": [
+            {
+              "type": "EV_KEY",
+              "code": "KEY_UP"
+            },
+            {
+              "type": "EV_KEY",
+              "code": "KEY_DOWN"
+            }
+          ]
+        }
       }
     }
   }
-}
+]
