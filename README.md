@@ -43,8 +43,8 @@ Evtranslator calls to fucntions from Lua file:
 - Update(deltaTime) (optional)
   - called aproximatelly every 10 miliseconds
 
-Both functions needs to return table of events or nil
-Example for sending key press to first device
+Both functions needs to return table of events or nil.
+Example for sending key press to first device:
 
 ```
 return {
