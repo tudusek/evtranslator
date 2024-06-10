@@ -1,4 +1,5 @@
-
 CXXFLAGS=
-all: mapper.cpp mapper.hpp main.cpp
-	g++ $(CXXFLAGS) mapper.cpp mapper.hpp main.cpp -levdev -o evdevmapper 
+LIBS=-levdev -llua
+
+all: src/mapper.cpp  src/main.cpp
+	g++ $(CXXFLAGS) src/mapper.cpp src/main.cpp $(LIBS) -I/usr/include/libevdev-1.0/ -Iinclude/ -o evdevmapper 
