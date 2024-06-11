@@ -37,24 +37,6 @@ Devices = {
   }
 }
 
-Utils.axisBorders = {
-  ABS_X = { min = 0, max = 65535 },
-  ABS_Y = { min = 0, max = 65535 },
-  ABS_HAT0X = { min = -1, max = 1 },
-  ABS_HAT0Y = { min = -1, max = 1 },
-  ABS_RX = { min = 0, max = 65535 },
-  ABS_RY = { min = 0, max = 65535 }
-}
-
-Utils.axisCenters = {
-  ABS_X = 32768,
-  ABS_Y = 32768,
-  ABS_HAT0X = 0,
-  ABS_HAT0Y = 0,
-  ABS_RX = 32768,
-  ABS_RY = 32768
-}
-
 Utils.axisDeadzones = {
   ABS_X = 16384,
   ABS_Y = 16384,
@@ -62,15 +44,6 @@ Utils.axisDeadzones = {
   ABS_HAT0Y = 0,
   ABS_RX = 256,
   ABS_RY = 256
-}
-
-Utils.axisLastStates = {
-  ABS_X = Utils.axisCenters.ABS_X,
-  ABS_Y = Utils.axisCenters.ABS_Y,
-  ABS_HAT0X = Utils.axisCenters.ABS_HAT0X,
-  ABS_HAT0Y = Utils.axisCenters.ABS_HAT0Y,
-  ABS_RX = Utils.axisCenters.ABS_RX,
-  ABS_RY = Utils.axisCenters.ABS_RY
 }
 
 local outEvQueue = {}

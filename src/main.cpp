@@ -8,6 +8,6 @@ int main (int argc, char *argv[]) {
         << std::endl;
     return -1;
   }
-  EvTranslator et(argv[1],argv[2]);
+  EvTranslator::init(argv[1],argv[2]);
   return 0;
 }

@@ -26,17 +26,26 @@ public:
     int device_version;
     std::vector<EventClass> advertisedCodes;
   };
-  EvTranslator(std::string inputDevPath, std::string configPath);
-  ~EvTranslator();
+
+  static void init(std::string inputDevPath, std::string configPath);
+  static void cleanup();
+  static void handleSignal(int signal);
 
 private:
-  bool run = true;
-  lua_State *L;
-  std::string in_device_path;
-  std::vector<Device> devices;
-  struct libevdev *input_dev;
-  void setupLua(std::string configPath);
-  void setupInputDev();
-  void setupOutputDev();
-  void eventLoop();
+  static bool run;
+  static lua_State *L;
+  static std::string in_device_path;
+  static std::vector<Device> devices;
+  static struct libevdev *input_dev;
+
+  static void setupLua(std::string configPath);
+  static void setupInputDev();
+  static void setupOutputDev();
+  static void eventLoop();
+
+  static void addFunctionsToLua();
+  class LuaFunctions {
+  public:
+    static int getABSInfo(lua_State *L);
+  };
 };
