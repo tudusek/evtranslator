@@ -26,6 +26,7 @@ public:
     int device_version;
     std::vector<EventClass> advertisedCodes;
   };
+  static bool grab;
 
   static void init(std::string inputDevPath, std::string configPath);
   static void cleanup();

@@ -1,5 +1,6 @@
 #include "../include/mapper.hpp"
 #include <chrono>
+#include <csignal>
 #include <fcntl.h>
 #include <iostream>
 #include <libevdev/libevdev-uinput.h>
@@ -11,15 +12,13 @@
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
-#include <csignal>
-
 
 bool EvTranslator::run;
+bool EvTranslator::grab = false;
 lua_State *EvTranslator::L;
 std::string EvTranslator::in_device_path;
 std::vector<EvTranslator::Device> EvTranslator::devices;
 struct libevdev *EvTranslator::input_dev;
-
 
 void EvTranslator::setupLua(std::string configPath) {
   EvTranslator::L = luaL_newstate();
@@ -178,9 +177,7 @@ void EvTranslator::init(std::string inputDevPath, std::string configPath) {
   cleanup();
 }
 
-void EvTranslator::handleSignal(int signal) {
-  run = false;
-}
+void EvTranslator::handleSignal(int signal) { run = false; }
 
 void EvTranslator::cleanup() {
   if (EvTranslator::L)
@@ -188,6 +185,9 @@ void EvTranslator::cleanup() {
 
   if (input_dev) {
     int fd = libevdev_get_fd(input_dev);
+    if (grab) {
+      libevdev_grab(input_dev, LIBEVDEV_UNGRAB);
+    }
     libevdev_free(input_dev);
     close(fd);
   }
@@ -213,6 +213,12 @@ void EvTranslator::setupInputDev() {
     std::cout << "Failed to init input device" << std::endl;
     EvTranslator::run = false;
     return;
+  }
+
+  if (grab) {
+    //give user time to release keys
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    libevdev_grab(input_dev, LIBEVDEV_GRAB);
   }
 
   std::cout << libevdev_get_name(input_dev) << std::endl;
@@ -458,7 +464,7 @@ void EvTranslator::eventLoop() {
       }
       outEvents.clear();
     }
-    
+
     std::this_thread::sleep_for(std::chrono::microseconds(500));
   }
 }

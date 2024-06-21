@@ -1,17 +1,23 @@
+--
+-- this configuration turns gamepad to keyboard and mouse
+--
 print("")
 print("////Gamepad configuration by Tudusek////")
 print("")
 
-Utils = require("configs.utils")
+function ScriptPath()
+   local str = debug.getinfo(2, "S").source:sub(2)
+   return str:match("(.*/)")
+end
+
+-- to look for scripts from same directory as this one 
+package.path = package.path..";"..ScriptPath().."?.lua"
+
+Utils = require("utils")
 
 Devices = {
   {
-    deviceBus = 0,
-    deviceVendor = 0,
-    deviceProduct = 0,
-    deviceVersion = 0,
     deviceName = "Gamepad",
-    absInfo = {},
     advertise = {
       EV_KEY = {
         "KEY_W",
@@ -149,10 +155,12 @@ function HandleEvent(event)
   if (event.type == "EV_ABS") then
     if (event.code == "ABS_X") then
       TableConcat(outEvQueue, Utils.AxisToButton(0, event.code, "KEY_A", "KEY_D", event.value))
+      -- TableConcat(outEvQueue, Utils.AxisToButton(0, event.code, "KEY_LEFT", "KEY_RIGHT", event.value))
       return nil
     end
     if (event.code == "ABS_Y") then
       TableConcat(outEvQueue, Utils.AxisToButton(0, event.code, "KEY_S", "KEY_W", event.value))
+      -- TableConcat(outEvQueue, Utils.AxisToButton(0, event.code, "KEY_DOWN", "KEY_UP", event.value))
       return nil
     end
     if (event.code == "ABS_RX") then

@@ -1,3 +1,6 @@
+--
+-- this configuration turns keypad to separate keyboard
+--
 print("")
 print("////Test configuration by Tudusek////")
 print("")

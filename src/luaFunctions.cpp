@@ -2,7 +2,6 @@
 #include <libevdev/libevdev.h>
 #include <linux/input.h>
 #include <lua.hpp>
-#include <string>
 
 void EvTranslator::addFunctionsToLua() {
   lua_createtable(L, 0, 0);
