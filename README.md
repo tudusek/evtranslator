@@ -2,8 +2,9 @@
 Turn any input device to any input device(s) on Linux
 
 ## Usage
-`evtranslator /dev/input/eventX /path/to/configuration.lua`
-You need to have permissions to open */dev/uinput* and the event device you want to use
+`evtranslator /dev/input/eventX /path/to/configuration.lua [--grab]`
+You need to have permissions to open */dev/uinput* and the event device you want to use.
+`--grab` option will prevent other programs from recieving events from specified input device. 
 
 ### Lua configuration
 Before you start read this [article](https://www.baeldung.com/linux/mouse-events-input-event-interface) to get better understanding how Linux input events work.
@@ -62,4 +63,13 @@ return {
 }
 ```
 
-Also checkout configs directory for examples
+Chheckout configs directory for examples.
+You can also use these functions to querry input device for more information:
+- EvTranslator.getABSInfo(axisCode)
+  - returns table absInfo for given axis
+- EvTranslator.hasProperty(propertyName)
+  - returns bool 
+- EvTranslator.hasEventType(evType)
+  - returns bool
+- EvTranslator.hasEventCode(evType,evCode)
+  - returns bool
