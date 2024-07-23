@@ -55,7 +55,7 @@ function CraftEvent(dev, t, c, val)
 end
 
 function HandleEvent(event)
-  if (type(event) == "nil") then
+  if (event.type == "EV_SYN") then
     return nil
   end
   -- print("LUA:"..event.type..":"..event.code..":"..event.value)
