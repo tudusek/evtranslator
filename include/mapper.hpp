@@ -12,19 +12,8 @@ class EvTranslator {
 public:
   class Device {
   public:
-    class EventClass {
-    public:
-      int eventType;
-      std::vector<int> eventCodes;
-    };
     struct libevdev *output_dev;
     struct libevdev_uinput *output_dev_uinput;
-    std::string device_name;
-    int device_bus;
-    int device_vendor;
-    int device_product;
-    int device_version;
-    std::vector<EventClass> advertisedCodes;
   };
   static bool grab;
 
@@ -48,5 +37,8 @@ private:
   class LuaFunctions {
   public:
     static int getABSInfo(lua_State *L);
+    static int hasProperty(lua_State *L);
+    static int hasEventType(lua_State *L);
+    static int hasEventCode(lua_State *L);
   };
 };

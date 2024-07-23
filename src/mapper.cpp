@@ -1,6 +1,7 @@
 #include "../include/mapper.hpp"
 #include <chrono>
 #include <csignal>
+#include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <libevdev/libevdev-uinput.h>
@@ -38,123 +39,6 @@ void EvTranslator::setupLua(std::string configPath) {
     EvTranslator::run = false;
     return;
   }
-
-  if (lua_getglobal(EvTranslator::L, "Devices") != LUA_TTABLE) {
-    std::cout << "Configuration error" << std::endl;
-    EvTranslator::run = false;
-    return;
-  }
-  auto len = lua_rawlen(EvTranslator::L, -1);
-  std::cout << "CFG count: " << len << std::endl;
-
-  for (int i = 1; i <= len; i++) {
-    EvTranslator::Device device;
-    device.output_dev = nullptr;
-    device.output_dev_uinput = nullptr;
-
-    lua_pushnumber(EvTranslator::L, i);
-    if (lua_gettable(EvTranslator::L, -2) != LUA_TTABLE) {
-      std::cout << "value on index " << i << " is not a table" << std::endl;
-      EvTranslator::run = false;
-      return;
-    }
-
-    if (lua_getfield(EvTranslator::L, -1, "deviceName") != LUA_TSTRING) {
-      std::cout << "deviceName is not specified or is not a string"
-                << std::endl;
-      EvTranslator::run = false;
-      return;
-    } else {
-      device.device_name = lua_tostring(EvTranslator::L, -1);
-      std::cout << device.device_name << ":" << std::endl;
-    }
-    lua_pop(L, 1);
-
-    int advertise = lua_getfield(EvTranslator::L, -1, "advertise");
-    if (advertise == LUA_TTABLE) {
-      lua_pushnil(EvTranslator::L);
-      while (lua_next(EvTranslator::L, -2) != 0) {
-        EvTranslator::Device::EventClass evc;
-        if (!lua_isstring(EvTranslator::L, -2)) {
-          std::cout << "Invalid event type in advertise" << std::endl;
-          EvTranslator::run = false;
-          return;
-        }
-        evc.eventType =
-            libevdev_event_type_from_name(lua_tostring(EvTranslator::L, -2));
-        if (evc.eventType == -1) {
-          std::cout << "Invalid event type in advertise" << std::endl;
-          EvTranslator::run = false;
-          return;
-        }
-
-        std::cout << "\tEvent type: " << evc.eventType << std::endl;
-
-        auto len2 = lua_rawlen(EvTranslator::L, -1);
-        for (int j = 1; j <= len2; j++) {
-          lua_pushnumber(EvTranslator::L, j);
-          if (lua_gettable(EvTranslator::L, -2) != LUA_TSTRING) {
-            std::cout << "Invalid event code" << std::endl;
-            EvTranslator::run = false;
-            return;
-          }
-          int evcode = libevdev_event_code_from_name(
-              evc.eventType, lua_tostring(EvTranslator::L, -1));
-          if (evcode == -1) {
-            std::cout << "Invalid event code" << std::endl;
-            EvTranslator::run = false;
-            return;
-          }
-          evc.eventCodes.push_back(evcode);
-          std::cout << "\t\tEvent code: " << evcode << std::endl;
-          lua_pop(EvTranslator::L, 1);
-        }
-        device.advertisedCodes.push_back(evc);
-        lua_pop(EvTranslator::L, 1);
-      }
-    } else if (advertise == LUA_TSTRING) {
-    } else {
-      std::cout << "advertise is not set or is invalid" << std::endl;
-      EvTranslator::run = false;
-      return;
-    }
-    lua_pop(EvTranslator::L, 1);
-
-    // Optional parameters
-    if (lua_getfield(EvTranslator::L, -1, "deviceBus") != LUA_TNUMBER) {
-      device.device_bus = 0;
-    } else {
-      device.device_bus = lua_tonumber(EvTranslator::L, -1);
-    }
-    lua_pop(EvTranslator::L, 1);
-
-    if (lua_getfield(EvTranslator::L, -1, "deviceVendor") != LUA_TNUMBER) {
-      device.device_vendor = 0;
-    } else {
-      device.device_vendor = lua_tonumber(EvTranslator::L, -1);
-    }
-    lua_pop(EvTranslator::L, 1);
-
-    if (lua_getfield(EvTranslator::L, -1, "deviceProduct") != LUA_TNUMBER) {
-      device.device_product = 0;
-    } else {
-      device.device_product = lua_tonumber(EvTranslator::L, -1);
-    }
-    lua_pop(EvTranslator::L, 1);
-
-    if (lua_getfield(EvTranslator::L, -1, "deviceVersion") != LUA_TNUMBER) {
-      device.device_version = 0;
-    } else {
-      device.device_version = lua_tonumber(EvTranslator::L, -1);
-    }
-    lua_pop(EvTranslator::L, 1);
-
-    // Pop device table
-    lua_pop(EvTranslator::L, 1);
-    EvTranslator::devices.push_back(device);
-  }
-  // Pop Devices
-  lua_pop(EvTranslator::L, 1);
 }
 
 void EvTranslator::init(std::string inputDevPath, std::string configPath) {
@@ -216,48 +100,179 @@ void EvTranslator::setupInputDev() {
   }
 
   if (grab) {
-    //give user time to release keys
+    // give user time to release keys
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     libevdev_grab(input_dev, LIBEVDEV_GRAB);
   }
 
-  std::cout << libevdev_get_name(input_dev) << std::endl;
+  // std::cout << libevdev_get_name(input_dev) << std::endl;
 }
 
 void EvTranslator::setupOutputDev() {
-  for (auto &device : EvTranslator::devices) {
+  if (lua_getglobal(EvTranslator::L, "Devices") != LUA_TTABLE) {
+    std::cout << "Output device(s) not specified" << std::endl;
+    EvTranslator::run = false;
+    return;
+  }
+  lua_pushnil(EvTranslator::L);
+  while (lua_next(EvTranslator::L, -2) != 0) {
+    EvTranslator::Device device;
     device.output_dev = libevdev_new();
     device.output_dev_uinput = nullptr;
+
     if (!device.output_dev) {
       std::cout << "Failed to allocate memory for device" << std::endl;
       EvTranslator::run = false;
       return;
     }
 
-    // Setup device ids
-    libevdev_set_name(device.output_dev, device.device_name.c_str());
-    libevdev_set_id_bustype(device.output_dev, device.device_bus);
-    libevdev_set_id_vendor(device.output_dev, device.device_vendor);
-    libevdev_set_id_product(device.output_dev, device.device_product);
-    libevdev_set_id_version(device.output_dev, device.device_version);
-    if (device.advertisedCodes.size()) {
-      for (auto evClass : device.advertisedCodes) {
-        for (auto evcode : evClass.eventCodes) {
-          switch (evClass.eventType) {
+    if (!lua_istable(EvTranslator::L, -1)) {
+      std::cout << "Not a table" << std::endl;
+      EvTranslator::run = false;
+      return;
+    }
+
+    if (lua_getfield(EvTranslator::L, -1, "deviceName") != LUA_TSTRING) {
+      std::cout << "deviceName is not specified or is not a string"
+                << std::endl;
+      EvTranslator::run = false;
+      return;
+    } else {
+      libevdev_set_name(device.output_dev, lua_tostring(EvTranslator::L, -1));
+      std::cout << lua_tostring(EvTranslator::L, -1) << ":" << std::endl;
+    }
+    lua_pop(EvTranslator::L, 1);
+
+    switch (lua_getfield(EvTranslator::L, -1, "advertise")) {
+    case LUA_TTABLE:
+      lua_pushnil(EvTranslator::L);
+      while (lua_next(EvTranslator::L, -2) != 0) {
+        if (!lua_isstring(EvTranslator::L, -2)) {
+          std::cout << "Invalid event type in advertise" << std::endl;
+          EvTranslator::run = false;
+          return;
+        }
+
+        auto eventType =
+            libevdev_event_type_from_name(lua_tostring(EvTranslator::L, -2));
+        if (eventType == -1) {
+          std::cout << "Invalid event type in advertise" << std::endl;
+          EvTranslator::run = false;
+          return;
+        }
+
+        std::cout << "\tEvent type: " << eventType << std::endl;
+        lua_pushnil(EvTranslator::L);
+        while (lua_next(EvTranslator::L, -2) != 0) {
+          if (!lua_isstring(EvTranslator::L, -1)) {
+            std::cout << "Invalid event code" << std::endl;
+            EvTranslator::run = false;
+            return;
+          }
+
+          auto evcode = libevdev_event_code_from_name(
+              eventType, lua_tostring(EvTranslator::L, -1));
+
+          if (evcode == -1) {
+            std::cout << "Invalid event code" << std::endl;
+            EvTranslator::run = false;
+            return;
+          }
+          std::cout << "\t\tEvent code: " << evcode << std::endl;
+          struct input_absinfo absInfo;
+          switch (eventType) {
           case EV_ABS:
-            // TODO
+            if (lua_getfield(L, -6, "absInfo") != LUA_TTABLE) {
+              std::cout << "Invalid event code" << std::endl;
+              EvTranslator::run = false;
+              return;
+            }
+            lua_getfield(L, -1, libevdev_event_code_get_name(EV_ABS, evcode));
+
+            if (!lua_istable(L, -1)) {
+              std::cout << "Invalid axis absInfo" << std::endl;
+              EvTranslator::run = false;
+              return;
+            }
+
+            if (lua_getfield(L, -1, "value") != LUA_TNUMBER) {
+              std::cout << "Invalid absInfo value" << std::endl;
+              EvTranslator::run = false;
+              return;
+            } else {
+              absInfo.value = lua_tonumber(L, 1);
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, "minimum") != LUA_TNUMBER) {
+              std::cout << "Invalid absInfo minimum" << std::endl;
+              EvTranslator::run = false;
+              return;
+            } else {
+              absInfo.minimum = lua_tonumber(L, 1);
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, "maximum") != LUA_TNUMBER) {
+              std::cout << "Invalid absInfo maximum" << std::endl;
+              EvTranslator::run = false;
+              return;
+            } else {
+              absInfo.maximum = lua_tonumber(L, 1);
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, "fuzz") != LUA_TNUMBER) {
+              std::cout << "Invalid absInfo fuzz" << std::endl;
+              EvTranslator::run = false;
+              return;
+            } else {
+              absInfo.fuzz = lua_tonumber(L, 1);
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, "flat") != LUA_TNUMBER) {
+              std::cout << "Invalid absInfo fuzz" << std::endl;
+              EvTranslator::run = false;
+              return;
+            } else {
+              absInfo.flat = lua_tonumber(L, 1);
+            }
+            lua_pop(L, 1);
+
+            if (lua_getfield(L, -1, "resolution") != LUA_TNUMBER) {
+              std::cout << "Invalid absInfo fuzz" << std::endl;
+              EvTranslator::run = false;
+              return;
+            } else {
+              absInfo.resolution = lua_tonumber(L, 1);
+            }
+            lua_pop(L, 1);
+
+            lua_pop(L, 2);
+            libevdev_enable_event_code(device.output_dev, eventType, evcode,
+                                       &absInfo);
             break;
           case EV_REP:
             // TODO
             break;
           default:
-            libevdev_enable_event_code(device.output_dev, evClass.eventType,
-                                       evcode, nullptr);
+            libevdev_enable_event_code(device.output_dev, eventType, evcode,
+                                       nullptr);
             break;
           }
+          lua_pop(EvTranslator::L, 1);
         }
+
+        lua_pop(EvTranslator::L, 1);
       }
-    } else {
+      break;
+    case LUA_TSTRING:
+      if (strcmp(lua_tostring(EvTranslator::L, -1), "input")) {
+        std::cout << "advertise string invalid" << std::endl;
+        EvTranslator::run = false;
+        return;
+      }
       for (int type = 1; type < EV_CNT; type++) {
         if (libevdev_has_event_type(EvTranslator::input_dev, type)) {
           for (int code = 0; code <= libevdev_event_type_get_max(type);
@@ -284,11 +299,82 @@ void EvTranslator::setupOutputDev() {
           }
         }
       }
+      for (int property = 0; property < INPUT_PROP_CNT; property++) {
+        if (libevdev_has_property(EvTranslator::input_dev, property)) {
+          libevdev_enable_property(device.output_dev, property);
+        }
+      }
+      break;
+    default:
+      std::cout << "advertise is not set or is invalid" << std::endl;
+      EvTranslator::run = false;
+      return;
+      break;
     }
+    lua_pop(EvTranslator::L, 1);
+
+    // Optional parameters
+    if (lua_getfield(EvTranslator::L, -1, "deviceBus") != LUA_TNUMBER) {
+      libevdev_set_id_bustype(device.output_dev, 0);
+    } else {
+      libevdev_set_id_bustype(device.output_dev,
+                              lua_tonumber(EvTranslator::L, -1));
+    }
+    lua_pop(EvTranslator::L, 1);
+
+    if (lua_getfield(EvTranslator::L, -1, "deviceVendor") != LUA_TNUMBER) {
+      libevdev_set_id_vendor(device.output_dev, 0);
+    } else {
+      libevdev_set_id_vendor(device.output_dev,
+                             lua_tonumber(EvTranslator::L, -1));
+    }
+    lua_pop(EvTranslator::L, 1);
+
+    if (lua_getfield(EvTranslator::L, -1, "deviceProduct") != LUA_TNUMBER) {
+      libevdev_set_id_product(device.output_dev, 0);
+    } else {
+      libevdev_set_id_product(device.output_dev,
+                              lua_tonumber(EvTranslator::L, -1));
+    }
+    lua_pop(EvTranslator::L, 1);
+
+    if (lua_getfield(EvTranslator::L, -1, "deviceVersion") != LUA_TNUMBER) {
+      libevdev_set_id_version(device.output_dev, 0);
+    } else {
+      libevdev_set_id_version(device.output_dev,
+                              lua_tonumber(EvTranslator::L, -1));
+    }
+    lua_pop(EvTranslator::L, 1);
+
+    if (lua_getfield(EvTranslator::L, -1, "properties") == LUA_TTABLE) {
+      lua_pushnil(EvTranslator::L);
+      while (lua_next(EvTranslator::L, -2) != 0) {
+        if (!lua_isstring(L, -1)) {
+          std::cout << "Property must be string" << std::endl;
+          EvTranslator::run = false;
+          return;
+        }
+
+        auto property = libevdev_property_from_name(lua_tostring(L, -1));
+        if (property < 0) {
+          std::cout << "Invalid propety name" << std::endl;
+          EvTranslator::run = false;
+          return;
+        }
+        libevdev_enable_property(device.output_dev, property);
+
+        lua_pop(EvTranslator::L, 1);
+      }
+    }
+    lua_pop(EvTranslator::L, 1);
+
+    // lua_pop(EvTranslator::L, 1);
     // Create device
     libevdev_uinput_create_from_device(device.output_dev,
                                        LIBEVDEV_UINPUT_OPEN_MANAGED,
                                        &device.output_dev_uinput);
+    lua_pop(EvTranslator::L, 1);
+    EvTranslator::devices.push_back(device);
   }
 }
 
@@ -303,26 +389,22 @@ int getEventsFromLua(lua_State *L,
                      std::vector<struct eventForDevice> &outEvents);
 
 int sendEventToLua(lua_State *L, struct input_event ev,
-                   std::vector<struct eventForDevice> &outEvents,
-                   bool nil = false) {
+                   std::vector<struct eventForDevice> &outEvents) {
   lua_getglobal(L, "HandleEvent");
   if (!lua_isfunction(L, -1)) {
     std::cout << "HandleEvent is not a function" << std::endl;
     return -1;
   }
-  if (nil) {
-    lua_pushnil(L);
-  } else {
-    lua_createtable(L, 0, 0);
-    lua_pushstring(L, libevdev_event_type_get_name(ev.type));
-    lua_setfield(L, -2, "type");
-    lua_pushstring(L, libevdev_event_code_get_name(ev.type, ev.code));
-    lua_setfield(L, -2, "code");
-    lua_pushinteger(L, ev.value);
-    lua_setfield(L, -2, "value");
-    lua_pushinteger(L, ev.type);
-    lua_setfield(L, -2, "time");
-  }
+  lua_createtable(L, 0, 0);
+  lua_pushstring(L, libevdev_event_type_get_name(ev.type));
+  lua_setfield(L, -2, "type");
+  lua_pushstring(L, libevdev_event_code_get_name(ev.type, ev.code));
+  lua_setfield(L, -2, "code");
+  lua_pushinteger(L, ev.value);
+  lua_setfield(L, -2, "value");
+  // TODO
+  //  lua_pushnumber(L, ev.time);
+  //  lua_setfield(L, -2, "time");
   if (lua_pcall(L, 1, 1, 0) != LUA_OK) {
     std::cout << "Error while calling function HandleEvent:" << std::endl;
     std::cout << lua_error(L) << std::endl;
@@ -423,12 +505,11 @@ void EvTranslator::eventLoop() {
         if (ev.type != EV_SYN) {
           events.push_back(ev);
         } else {
+          events.push_back(ev);
           for (auto event : events) {
             if (sendEventToLua(EvTranslator::L, event, outEvents))
               return;
           }
-          if (sendEventToLua(EvTranslator::L, {0, 0, 0, 0}, outEvents, true))
-            return;
           events.clear();
         }
       }

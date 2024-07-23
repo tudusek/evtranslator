@@ -7,6 +7,12 @@ void EvTranslator::addFunctionsToLua() {
   lua_createtable(L, 0, 0);
   lua_pushcfunction(L, EvTranslator::LuaFunctions::getABSInfo);
   lua_setfield(L, -2, "getABSInfo");
+  lua_pushcfunction(L, EvTranslator::LuaFunctions::hasProperty);
+  lua_setfield(L, -2, "hasProperty");
+  lua_pushcfunction(L, EvTranslator::LuaFunctions::hasEventType);
+  lua_setfield(L, -2, "hasEventType");
+  lua_pushcfunction(L, EvTranslator::LuaFunctions::hasEventCode);
+  lua_setfield(L, -2, "hasEventCode");
   lua_setglobal(L, "EvTranslator");
 }
 
@@ -36,5 +42,67 @@ int EvTranslator::LuaFunctions::getABSInfo(lua_State *L) {
   lua_setfield(L, -2, "flat");
   lua_pushinteger(L, absinfo.resolution);
   lua_setfield(L, -2, "resolution");
+  return 1;
+}
+
+int EvTranslator::LuaFunctions::hasProperty(lua_State *L) {
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Invalid number of arguments");
+  }
+
+  if (!lua_isstring(L, -1)) {
+    return luaL_error(L, "Argument must be string");
+  }
+
+  auto property = libevdev_property_from_name(lua_tostring(L, -1));
+  if (property < 0) {
+    return luaL_error(L, "Invalid property name");
+  }
+  lua_pushboolean(L, libevdev_has_property(EvTranslator::input_dev, property));
+  return 1;
+}
+
+int EvTranslator::LuaFunctions::hasEventType(lua_State *L) {
+  if (lua_gettop(L) != 1) {
+    return luaL_error(L, "Invalid number of arguments");
+  }
+
+  if (!lua_isstring(L, -1)) {
+    return luaL_error(L, "Argument must be string");
+  }
+
+  auto type = libevdev_event_type_from_name(lua_tostring(L, -1));
+  if (type < 0) {
+    return luaL_error(L, "Invalid type name");
+  }
+  lua_pushboolean(L, libevdev_has_event_type(EvTranslator::input_dev, type));
+  return 1;
+}
+
+int EvTranslator::LuaFunctions::hasEventCode(lua_State *L) {
+  if (lua_gettop(L) != 2) {
+    return luaL_error(L, "Invalid number of arguments");
+  }
+
+  if (!lua_isstring(L, -1)) {
+    return luaL_error(L, "Arguments must be string");
+  }
+
+  if (!lua_isstring(L, -2)) {
+    return luaL_error(L, "Arguments must be string");
+  }
+
+  auto type = libevdev_event_type_from_name(lua_tostring(L, -2));
+  if (type < 0) {
+    return luaL_error(L, "Invalid type name");
+  }
+  auto code = libevdev_event_code_from_name(type, lua_tostring(L, -1));
+  if (code < 0) {
+    return luaL_error(L, "Invalid code name");
+  }
+
+  lua_pushboolean(L,
+                  libevdev_has_event_code(EvTranslator::input_dev, type, code));
+
   return 1;
 }
