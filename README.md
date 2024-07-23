@@ -1,4 +1,4 @@
-# Evtranslator
+# EvTranslator
 Turn any input device to any input device(s) on Linux
 
 ## Usage
@@ -21,7 +21,17 @@ Devices = {
     deviceProduct = 0, -- optional
     deviceVersion = 0, -- optional
     deviceName = "YourDeviceName",
-    absInfo = {}, -- not done yet
+    -- informations about axies
+    absInfo = {
+      ABS_X = {
+        value = 0,
+        minimum = -32768,
+        maximum = 32767,
+        fuzz = 16,
+        flat = 128,
+        resolution = 0
+      },
+    },
     -- events that will be advertised on this device
     -- advertise = "input" will advertise all event types and codes from input device
     advertise = {
@@ -39,7 +49,6 @@ Devices = {
 Evtranslator calls to fucntions from Lua file:
 - HandleEvent(event)
   - called for every event from input device
-  - if event from input device is EV_SYN then event parameter is nil 
 - Update(deltaTime) (optional)
   - called aproximatelly every 10 miliseconds
 
