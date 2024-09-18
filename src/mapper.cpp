@@ -1,4 +1,5 @@
 #include "../include/mapper.hpp"
+#include <cerrno>
 #include <chrono>
 #include <csignal>
 #include <cstring>
@@ -85,6 +86,7 @@ void EvTranslator::cleanup() {
 }
 
 void EvTranslator::setupInputDev() {
+  std::cout << "Openning " << in_device_path << std::endl;
   int input_dev_fd = open(in_device_path.c_str(), O_RDONLY);
   if (input_dev_fd < 0) {
     std::cout << "Failed to open input device" << std::endl;
@@ -94,7 +96,7 @@ void EvTranslator::setupInputDev() {
 
   int error = libevdev_new_from_fd(input_dev_fd, &input_dev);
   if (error < 0) {
-    std::cout << "Failed to init input device" << std::endl;
+    std::cout << "Failed to init input device: " << error << std::endl;
     EvTranslator::run = false;
     return;
   }
@@ -370,9 +372,12 @@ void EvTranslator::setupOutputDev() {
 
     // lua_pop(EvTranslator::L, 1);
     // Create device
-    libevdev_uinput_create_from_device(device.output_dev,
-                                       LIBEVDEV_UINPUT_OPEN_MANAGED,
-                                       &device.output_dev_uinput);
+    if (libevdev_uinput_create_from_device(device.output_dev,
+                                           LIBEVDEV_UINPUT_OPEN_MANAGED,
+                                           &device.output_dev_uinput) < 0) {
+      std::cout << "Unable to create uinput device" << std::endl;
+      EvTranslator::run = false;
+    }
     lua_pop(EvTranslator::L, 1);
     EvTranslator::devices.push_back(device);
   }
@@ -492,7 +497,8 @@ void EvTranslator::eventLoop() {
 
   while (EvTranslator::run) {
     struct input_event ev;
-    if (libevdev_has_event_pending(input_dev)) {
+    int isEventPending = libevdev_has_event_pending(input_dev);
+    if (isEventPending > 0) {
       rc = libevdev_next_event(
           input_dev, LIBEVDEV_READ_FLAG_NORMAL | LIBEVDEV_READ_FLAG_BLOCKING,
           &ev);
@@ -500,7 +506,7 @@ void EvTranslator::eventLoop() {
         while (rc == LIBEVDEV_READ_STATUS_SYNC) {
           rc = libevdev_next_event(input_dev, LIBEVDEV_READ_FLAG_SYNC, &ev);
         }
-      } else if (rc == LIBEVDEV_READ_STATUS_SUCCESS) {
+      } else if (rc == LIBEVDEV_READ_STATUS_SUCCESS || rc == -EAGAIN) {
         // handle events
         if (ev.type != EV_SYN) {
           events.push_back(ev);
@@ -512,9 +518,14 @@ void EvTranslator::eventLoop() {
           }
           events.clear();
         }
+      } else {
+        std::cout << "Error while trying to check for events" << std::endl;
+        EvTranslator::run = false;
       }
+    } else if (isEventPending < 0) {
+      std::cout << "Error while trying to check for events" << std::endl;
+      EvTranslator::run = false;
     }
-
     auto now = std::chrono::high_resolution_clock::now();
     double delta =
         std::chrono::duration<double, std::milli>(now - lastTime).count();
