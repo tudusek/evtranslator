@@ -1,6 +1,5 @@
 --
--- This configuration turns gamepad into keyboard and mouse.
--- You probably want to change the keymap if you are not using EasySMX esm-4108 with blacklisted hid_nintendo.
+-- This configuration turns mocute-050 gamepad into keyboard and mouse.
 --
 print("")
 print("////Gamepad configuration by Tudusek////")
@@ -9,7 +8,7 @@ print("")
 
 Devices = {
   {
-    deviceName = "Gamepad",
+    deviceName = "Gamepad2",
     advertise = {
       EV_KEY = {
         "KEY_W",
@@ -37,25 +36,26 @@ Devices = {
 
 local map = {
   EV_KEY = {
-    BTN_EAST = { evt = "EV_KEY", evc = "KEY_E" },
-    BTN_C = { evt = "EV_KEY", evc = "KEY_SPACE" },
+    BTN_TL2 = { evt = "EV_KEY", evc = "BTN_RIGHT" },
+    BTN_TR2 = { evt = "EV_KEY", evc = "BTN_LEFT" },
+    BTN_TL = { evt = "EV_REL", evc = "REL_WHEEL", val = 1 },
+    BTN_TR = { evt = "EV_REL", evc = "REL_WHEEL", val = -1 },
+    BTN_WEST = { evt = "EV_KEY", evc = "KEY_E" },
+    BTN_SOUTH = { evt = "EV_KEY", evc = "KEY_SPACE" },
     BTN_NORTH = { evt = "EV_KEY", evc = "KEY_Q" },
-    BTN_SOUTH = { evt = "EV_KEY", evc = "KEY_F" },
-    BTN_TL = { evt = "EV_KEY", evc = "BTN_RIGHT" },
-    BTN_TR = { evt = "EV_KEY", evc = "BTN_LEFT" },
-    BTN_SELECT = { evt = "EV_KEY", evc = "KEY_LEFTSHIFT" },
-    BTN_START = { evt = "EV_KEY", evc = "KEY_LEFTCTRL" },
-    BTN_TR2 = { evt = "EV_KEY", evc = "KEY_ESC" },
-    BTN_WEST = { evt = "EV_REL", evc = "REL_WHEEL", val = 1 },
-    BTN_Z = { evt = "EV_REL", evc = "REL_WHEEL", val = -1 },
+    BTN_EAST = { evt = "EV_KEY", evc = "KEY_F" },
+    BTN_START = { evt = "EV_KEY", evc = "KEY_ESC" },
+    BTN_THUMBL = { evt = "EV_KEY", evc = "KEY_LEFTSHIFT" },
+    BTN_THUMBR = { evt = "EV_KEY", evc = "KEY_LEFTCTRL" },
+    BTN_SELECT = { evt = "EV_KEY", evc = "KEY_F3" },
   },
   EV_ABS = {
-    ABS_X = { evt = "EV_KEY", evc = { "KEY_A", "KEY_D" }, dzone = 16384 },
-    ABS_Y = { evt = "EV_KEY", evc = { "KEY_S", "KEY_W" }, dzone = 16384 },
+    ABS_X = { evt = "EV_KEY", evc = { "KEY_A", "KEY_D" }, dzone = 2 },
+    ABS_Y = { evt = "EV_KEY", evc = { "KEY_W", "KEY_S" }, dzone = 2 },
     ABS_HAT0X = { evt = "EV_REL", evc = "REL_X", min = -2, max = 2 },
     ABS_HAT0Y = { evt = "EV_REL", evc = "REL_Y", min = -2, max = 2 },
-    ABS_RX = { evt = "EV_REL", evc = "REL_X", dzone = 256, min = -10, max = 10 },
-    ABS_RY = { evt = "EV_REL", evc = "REL_Y", dzone = 256, min = 10, max = -10 },
+    ABS_Z = { evt = "EV_REL", evc = "REL_X", dzone = 2, min = -10, max = 10 },
+    ABS_RZ = { evt = "EV_REL", evc = "REL_Y", dzone = 2, min = -10, max = 10 },
   }
 }
 
@@ -170,7 +170,7 @@ function HandleEvent(event)
           ConstructEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, event.value))
         table.insert(outEvQueue, ConstructSynEvent(0))
       end
-      if (map[event.type][event.code].evt == "EV_REL") then
+      if (map[event.type][event.code].evt == "EV_REL" and event.value == 1) then
         table.insert(outEvQueue,
           ConstructEvent(0,
             map[event.type][event.code].evt,
