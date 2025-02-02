@@ -1,5 +1,7 @@
 # EvTranslator
-Turn any input device to any input device(s) on Linux
+Turn any input device to any input device(s) on Linux.
+This program lets you do advanced pocessing of input device events.
+For example you can remap buttons, split keyboard into multiple separate devices, turn gamepad into keyboard and mouse and many crazy things you can think of.
 
 ## Usage
 `evtranslator /dev/input/eventX /path/to/configuration.lua [--grab]`
@@ -22,7 +24,7 @@ Devices = {
     deviceProduct = 0, -- optional
     deviceVersion = 0, -- optional
     deviceName = "YourDeviceName",
-    -- informations about axies
+    -- informations about axies (optional)
     absInfo = {
       ABS_X = {
         value = 0,
@@ -46,30 +48,22 @@ Devices = {
   }
 }
 ```
+Checkout configs directory for examples.
 
-Evtranslator calls to fucntions from Lua file:
+Evtranslator calls two fucntions from Lua file:
 - HandleEvent(event)
   - called for every event from input device
 - Update(deltaTime) (optional)
   - called aproximatelly every 10 miliseconds
 
-Both functions needs to return table of events or nil.
-Example for sending key press to first device:
-
-```
-return {
-  { device = 0, type = "EV_KEY", code = "KEY_W", value = 1 },
-  { device = 0, type = "EV_SYN", code = "SYN_REPORT", value = 0 },
-}
-```
-
-Chheckout configs directory for examples.
 You can also use these functions to querry input device for more information:
 - EvTranslator.getABSInfo(axisCode)
   - returns table absInfo for given axis
 - EvTranslator.hasProperty(propertyName)
   - returns bool 
-- EvTranslator.hasEventType(evType)
+- EvTranslator.hasEventType(eventType)
   - returns bool
-- EvTranslator.hasEventCode(evType,evCode)
+- EvTranslator.hasEventCode(eventType,eventCode)
   - returns bool
+- EvTranslator.sendEvent(device, eventType, eventCode, eventValue)
+  - no return value
