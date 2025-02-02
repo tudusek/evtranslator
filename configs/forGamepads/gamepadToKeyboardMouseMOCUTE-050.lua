@@ -1,6 +1,7 @@
 --
 -- This configuration turns mocute-050 gamepad into keyboard and mouse.
 --
+--
 print("")
 print("////Gamepad configuration by Tudusek////")
 print("")
@@ -50,8 +51,8 @@ local map = {
     BTN_SELECT = { evt = "EV_KEY", evc = "KEY_F3" },
   },
   EV_ABS = {
-    ABS_X = { evt = "EV_KEY", evc = { "KEY_A", "KEY_D" }, dzone = 2 },
-    ABS_Y = { evt = "EV_KEY", evc = { "KEY_W", "KEY_S" }, dzone = 2 },
+    ABS_X = { evt = "EV_KEY", evc = { "KEY_A", "KEY_D" }, dzone = 16 },
+    ABS_Y = { evt = "EV_KEY", evc = { "KEY_W", "KEY_S" }, dzone = 16 },
     ABS_HAT0X = { evt = "EV_REL", evc = "REL_X", min = -2, max = 2 },
     ABS_HAT0Y = { evt = "EV_REL", evc = "REL_Y", min = -2, max = 2 },
     ABS_Z = { evt = "EV_REL", evc = "REL_X", dzone = 2, min = -10, max = 10 },
@@ -59,18 +60,9 @@ local map = {
   }
 }
 
-
+local toggleStates = {}
 local axesLStates = {}
 local axesABSInfo = {}
-local outEvQueue = {}
-local flushQueue = false
-
-function TableConcat(t1, t2)
-  for i = 1, #t2 do
-    t1[#t1 + 1] = t2[i]
-  end
-  return t1
-end
 
 function ConstructEvent(device, evType, evCode, evValue)
   return { device = device, type = evType, code = evCode, value = evValue }
@@ -138,57 +130,55 @@ function AxisToRel(device, axCode, axDZone, relAxCode, relMin, relMax, axValue)
 end
 
 function Update(deltaTime)
-  local queue = {}
   for axCode, value in pairs(map["EV_ABS"]) do
     if (value.evt == "EV_REL") then
       if (axesLStates[axCode] ~= nil) then
-        TableConcat(queue, AxisToRel(0, axCode, value.dzone, value.evc, value.min, value.max, axesLStates[axCode]))
+        for index, event in ipairs(AxisToRel(0, axCode, value.dzone, value.evc, value.min, value.max, axesLStates[axCode])) do
+          EvTranslator.sendEvent(event.device, event.type, event.code, event.value)
+        end
       end
     end
   end
-  if (#queue == 0) then
-    return nil
-  end
-  return queue
 end
 
 function HandleEvent(event)
-  if (flushQueue) then
-    outEvQueue = {}
-    flushQueue = false
-  end
-
-  if (event.type == "EV_SYN" and event.code == "SYN_REPORT") then
-    flushQueue = true
-    return outEvQueue
-  end
-
   if (map[event.type] ~= nil and map[event.type][event.code] ~= nil) then
     if (event.type == "EV_KEY") then
       if (map[event.type][event.code].evt == "EV_KEY") then
-        table.insert(outEvQueue,
-          ConstructEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, event.value))
-        table.insert(outEvQueue, ConstructSynEvent(0))
+        if (map[event.type][event.code].toggle) then
+          if (event.value == 1 and (toggleStates[map[event.type][event.code].evc] == nil or toggleStates[map[event.type][event.code].evc] == false)) then
+            EvTranslator.sendEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, 1)
+            EvTranslator.sendEvent(0, "EV_SYN", "SYN_REPORT", 0)
+            toggleStates[map[event.type][event.code].evc] = true
+          elseif (event.value == 1 and toggleStates[map[event.type][event.code].evc] == true) then
+            EvTranslator.sendEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, 0)
+            EvTranslator.sendEvent(0, "EV_SYN", "SYN_REPORT", 0)
+            toggleStates[map[event.type][event.code].evc] = false
+          end
+        else
+          EvTranslator.sendEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, event.value)
+          EvTranslator.sendEvent(0, "EV_SYN", "SYN_REPORT", 0)
+        end
       end
       if (map[event.type][event.code].evt == "EV_REL" and event.value == 1) then
-        table.insert(outEvQueue,
-          ConstructEvent(0,
-            map[event.type][event.code].evt,
-            map[event.type][event.code].evc,
-            map[event.type][event.code].val))
-        table.insert(outEvQueue, ConstructSynEvent(0))
+        EvTranslator.sendEvent(0,
+          map[event.type][event.code].evt,
+          map[event.type][event.code].evc,
+          map[event.type][event.code].val)
+        EvTranslator.sendEvent(0, "EV_SYN", "SYN_REPORT", 0)
       end
     end
     if (event.type == "EV_ABS") then
       if (map[event.type][event.code].evt == "EV_KEY") then
-        TableConcat(outEvQueue,
-          AxisToButton(
-            0,
-            event.code,
-            map[event.type][event.code].dzone,
-            map[event.type][event.code].evc[1],
-            map[event.type][event.code].evc[2],
-            event.value))
+        for index, axisEvent in ipairs(AxisToButton(
+          0,
+          event.code,
+          map[event.type][event.code].dzone,
+          map[event.type][event.code].evc[1],
+          map[event.type][event.code].evc[2],
+          event.value)) do
+          EvTranslator.sendEvent(axisEvent.device, axisEvent.type, axisEvent.code, axisEvent.value)
+        end
         axesLStates[event.code] = event.value
       end
       if (map[event.type][event.code].evt == "EV_REL") then
@@ -197,5 +187,4 @@ function HandleEvent(event)
       end
     end
   end
-  return nil
 end

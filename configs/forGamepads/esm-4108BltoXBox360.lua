@@ -142,26 +142,26 @@ end
 
 function HandleEvent(event)
   if (event.type == "EV_SYN") then
-    return { ConstructEvent(0, event.type, event.code, event.value) }
+    EvTranslator.sendEvent(0, event.type, event.code, event.value)
   end
   if (map[event.type] ~= nil and map[event.type][event.code] ~= nil) then
     if (type(map[event.type][event.code]) == "string" and map[event.type][event.code] == "pass") then
-      return { ConstructEvent(0, event.type, event.code, event.value) }
+      EvTranslator.sendEvent(0, event.type, event.code, event.value)
     elseif (type(map[event.type][event.code]) == "table") then
       if (event.type == "EV_KEY") then
         if (map[event.type][event.code].evt == "EV_KEY") then
-          return { ConstructEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, event.value) }
+          EvTranslator.sendEvent(0, map[event.type][event.code].evt, map[event.type][event.code].evc, event.value)
         elseif (map[event.type][event.code].evt == "EV_ABS") then
           if (event.value == 0) then
-            return { ConstructEvent(0,
+            EvTranslator.sendEvent(0,
               map[event.type][event.code].evt,
               map[event.type][event.code].evc,
-              Devices[1].absInfo[map[event.type][event.code].evc].minimum) }
+              Devices[1].absInfo[map[event.type][event.code].evc].minimum)
           elseif (event.value == 1) then
-            return { ConstructEvent(0,
+            EvTranslator.sendEvent(0,
               map[event.type][event.code].evt,
               map[event.type][event.code].evc,
-              Devices[1].absInfo[map[event.type][event.code].evc].maximum) }
+              Devices[1].absInfo[map[event.type][event.code].evc].maximum)
           end
         end
       elseif (event.type == "EV_ABS") then
@@ -172,10 +172,10 @@ function HandleEvent(event)
         if (map[event.type][event.code].invert ~= nil and map[event.type][event.code].invert) then
           val = val * -1;
         end
-        return { ConstructEvent(0,
+        EvTranslator.sendEvent(0,
           map[event.type][event.code].evt,
           map[event.type][event.code].evc,
-          val) }
+          val)
       end
     end
   end

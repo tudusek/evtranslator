@@ -44,54 +44,60 @@ Devices = {
 -- }
 
 -- OUT
--- {{deviceID, type, code, value },... }
--- or nil
+-- EvTranslator.sendEvent(deviceID, type, code, value)
 
 function CraftEvent(dev, t, c, val)
   return {
     { device = dev, type = t,        code = c,            value = val },
-    { device = dev,   type = "EV_SYN", code = "SYN_REPORT", value = 0 }
+    { device = dev, type = "EV_SYN", code = "SYN_REPORT", value = 0 }
   }
 end
 
+local p1KeyPressed = false
+local p2KeyPressed = false
+
 function HandleEvent(event)
   if (event.type == "EV_SYN") then
-    return nil
-  end
-  -- print("LUA:"..event.type..":"..event.code..":"..event.value)
-  -- Ignore EV_MSC
-  if (event.type == "EV_MSC") then
-    return nil
-  end
-  if (event.type == "EV_KEY") then
+    if (p1KeyPressed) then
+      EvTranslator.sendEvent(1, event.type, event.code, event.value)
+      p1KeyPressed = false
+    end
+    if (p2KeyPressed) then
+      EvTranslator.sendEvent(0, event.type, event.code, event.value)
+      p2KeyPressed = false
+    end
+  elseif (event.type == "EV_KEY") then
     if (event.code == "KEY_KP8") then
-      return CraftEvent(0, "EV_KEY", "KEY_W", event.value)
-    end
-    if (event.code == "KEY_KP5") then
-      return CraftEvent(0, "EV_KEY", "KEY_S", event.value)
-    end
-    if (event.code == "KEY_KP4") then
-      return CraftEvent(0, "EV_KEY", "KEY_A", event.value)
-    end
-    if (event.code == "KEY_KP6") then
-      return CraftEvent(0, "EV_KEY", "KEY_D", event.value)
-    end
-    if (event.code == "KEY_KPENTER") then
-      return CraftEvent(0, "EV_KEY", "KEY_SPACE", event.value)
-    end
-    if (event.code == "KEY_KP7") then
-      return CraftEvent(0, "EV_KEY", "KEY_Q", event.value)
-    end
-    if (event.code == "KEY_KP9") then
-      return CraftEvent(0, "EV_KEY", "KEY_E", event.value)
-    end
-    if (event.code == "KEY_KPPLUS") then
-      return CraftEvent(0, "EV_KEY", "KEY_F", event.value)
-    end
-    if (event.code == "KEY_KPSLASH") then
-      return CraftEvent(0, "EV_KEY", "KEY_ESC", event.value)
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_W", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KP5") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_S", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KP4") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_A", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KP6") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_D", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KPENTER") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_SPACE", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KP7") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_Q", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KP9") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_E", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KPPLUS") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_F", event.value)
+      p2KeyPressed = true
+    elseif (event.code == "KEY_KPSLASH") then
+      EvTranslator.sendEvent(0, "EV_KEY", "KEY_ESC", event.value)
+      p2KeyPressed = true
+    else
+      -- Relay all unhandled events to fallback device
+      p1KeyPressed = true
+      EvTranslator.sendEvent(1, event.type, event.code, event.value)
     end
   end
-  -- Relay all unhandled events to fallback device
-  return CraftEvent(1, event.type, event.code, event.value)
 end

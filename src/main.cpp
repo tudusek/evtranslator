@@ -5,7 +5,7 @@
 int main (int argc, char *argv[]) {
   if (argc != 3 && argc != 4) {
     std::cout
-        << "Usage: evdevmapper /path/to/device /path/to/configuration.lua [options]"
+        << "Usage: evtranslator /path/to/device /path/to/configuration.lua [options]"
         << std::endl;
     return -1;
   }
